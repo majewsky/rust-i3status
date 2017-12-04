@@ -17,3 +17,13 @@
 *******************************************************************************/
 
 pub mod clock;
+pub mod battery;
+
+use block;
+
+pub fn all() -> Vec<Box<block::Provider>> {
+    vec![
+        Box::new(battery::Provider{}),
+        Box::new(clock::Provider{}),
+    ]
+}

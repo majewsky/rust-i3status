@@ -16,37 +16,15 @@
 *
 *******************************************************************************/
 
-extern crate chrono;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
-
-use chrono::{Local, Timelike};
-use std::time::Duration;
-
-mod block;
-mod providers;
+use block;
 use block::Block;
 
-fn main() {
-    //initialize protocol
-    println!("{{\"version\":1}}\n[");
+pub struct Provider {}
 
-    let providers = providers::all();
+impl block::Provider for Provider {
 
-    loop {
-        //collect blocks from all providers
-        let blocks: Vec<Block> = providers.iter()
-            .flat_map(|p| p.render())
-            .collect();
-
-        //show blocks
-        println!("{},", json!(blocks).to_string());
-
-        //sleep until next full second
-        let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);
-        std::thread::sleep(Duration::new(0, nsecs));
+    fn render(&self) -> Vec<Block> {
+        vec![] //TODO
     }
+
 }
