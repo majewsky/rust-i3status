@@ -16,15 +16,81 @@
 *
 *******************************************************************************/
 
+use std::fs::File;
+use std::io::Read;
+
 use block;
 use block::Block;
+
+const ENERGY_FULL_PATH: &'static str = "/sys/class/power_supply/BAT0/energy_full";
+const ENERGY_NOW_PATH:  &'static str = "/sys/class/power_supply/BAT0/energy_now";
+const POWER_ONLINE_PATH: &'static str = "/sys/class/power_supply/AC0/online";
+
+const CHARGING_COLOR: &'static str = "#00AA00";
+const NORMAL_COLOR:   &'static str = "#AAAA00";
+const WARNING_COLOR:  &'static str = "#AA0000";
 
 pub struct Provider {}
 
 impl block::Provider for Provider {
 
     fn render(&self) -> Vec<Block> {
-        vec![] //TODO
+        let energy_full = match read_number_from_file(ENERGY_FULL_PATH) {
+            Some(val) => val,
+            None      => return Vec::new(),
+        };
+        let energy_now = match read_number_from_file(ENERGY_NOW_PATH) {
+            Some(val) => val,
+            None      => return Vec::new(),
+        };
+        let is_charging = match read_number_from_file(POWER_ONLINE_PATH) {
+            Some(val) => val > 0,
+            None      => return Vec::new(),
+        };
+
+        let energy_percent = energy_now * 100 / energy_full;
+        let color = if is_charging {
+            CHARGING_COLOR
+        } else if energy_percent < 10 {
+            WARNING_COLOR
+        } else {
+            NORMAL_COLOR
+        };
+
+        vec![
+            Block{
+                name: "battery",
+                instance: Some("_caption"),
+                full_text: "bat".to_owned(),
+                color: color,
+                ..Block::default()
+            },
+            Block{
+                name: "battery",
+                instance: None,
+                full_text: format!("{}%", energy_percent),
+                color: color,
+                separator: true,
+                separator_block_width: 15,
+                ..Block::default()
+            },
+        ]
     }
 
+}
+
+fn read_number_from_file(path: &str) -> Option<i64> {
+    let mut file = match File::open(path) {
+        Ok(f) => f,
+        Err(_) => return None,
+    };
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => {},
+        Err(_) => return None,
+    };
+    match contents.trim().parse::<i64>() {
+        Ok(val) => Some(val),
+        Err(_) => None,
+    }
 }
