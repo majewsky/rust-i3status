@@ -1,0 +1,6 @@
+[package]
+name = "custom-i3status"
+version = "0.1.0"
+authors = ["Stefan Majewsky <majewsky@gmx.net>"]
+
+[dependencies]

@@ -1,0 +1,4 @@
+[root]
+name = "custom-i3status"
+version = "0.1.0"
+
