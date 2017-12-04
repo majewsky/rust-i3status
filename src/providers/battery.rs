@@ -20,7 +20,7 @@ use std::fs::File;
 use std::io::Read;
 
 use block;
-use block::Block;
+use block::{Block, make_section};
 
 const ENERGY_FULL_PATH: &'static str = "/sys/class/power_supply/BAT0/energy_full";
 const ENERGY_NOW_PATH:  &'static str = "/sys/class/power_supply/BAT0/energy_now";
@@ -57,24 +57,14 @@ impl block::Provider for Provider {
             NORMAL_COLOR
         };
 
-        vec![
+        make_section("bat", &[
             Block{
                 name: "battery",
-                instance: Some("_caption"),
-                full_text: "bat".to_owned(),
-                color: color,
-                ..Block::default()
-            },
-            Block{
-                name: "battery",
-                instance: None,
                 full_text: format!("{}%", energy_percent),
                 color: color,
-                separator: true,
-                separator_block_width: 15,
                 ..Block::default()
             },
-        ]
+        ])
     }
 
 }

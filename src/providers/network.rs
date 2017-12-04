@@ -16,16 +16,22 @@
 *
 *******************************************************************************/
 
-pub mod clock;
-pub mod battery;
-pub mod network;
-
 use block;
+use block::{Block, make_section};
 
-pub fn all() -> Vec<Box<block::Provider>> {
-    vec![
-        Box::new(network::Provider{}),
-        Box::new(battery::Provider{}),
-        Box::new(clock::Provider{}),
-    ]
+pub struct Provider {}
+
+impl block::Provider for Provider {
+
+    fn render(&self) -> Vec<Block> {
+        make_section("ip", &[
+            Block{
+                name: "network",
+                full_text: "TODO".to_owned(),
+                color: "#00AAAA",
+                ..Block::default()
+            },
+        ])
+    }
+
 }

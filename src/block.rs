@@ -17,12 +17,13 @@
 *******************************************************************************/
 
 use std::ops::Not;
+use std::vec::Vec;
 
 fn is_zero(x: &u32) -> bool {
     *x == 0
 }
 
-#[derive(Default,Serialize)]
+#[derive(Clone,Default,Serialize)]
 pub struct Block<'a> {
     pub name: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,4 +44,34 @@ pub struct Block<'a> {
 
 pub trait Provider {
     fn render(&self) -> Vec<Block>;
+}
+
+pub fn make_section<'a>(caption: &'static str, blocks: &[Block<'a>]) -> Vec<Block<'a>>{
+    if blocks.is_empty() {
+        return Vec::new();
+    }
+
+    //add a header in front of the given blocks, while trying to match the color
+    //of the existing blocks
+    let first_block = &(blocks[0]);
+    let mut result = vec![
+        Block {
+            name: first_block.name,
+            instance: Some("_caption"),
+            full_text: caption.to_owned(),
+            color: first_block.color,
+            ..Block::default()
+        },
+    ];
+    result.extend_from_slice(&blocks);
+
+    //add a separator to the right of the rightmost block to visually separate sections
+    {
+        let last_idx = result.len() - 1;
+        let last_block = &mut result[last_idx];
+        last_block.separator = true;
+        last_block.separator_block_width = 15;
+    }
+
+    result
 }
