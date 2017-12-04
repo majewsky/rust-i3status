@@ -16,36 +16,31 @@
 *
 *******************************************************************************/
 
-extern crate chrono;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
+use std::ops::Not;
 
-use chrono::{Local, Timelike};
-use std::time::Duration;
+fn is_zero(x: &u32) -> bool {
+    *x == 0
+}
 
-mod block;
-mod providers;
-use block::Provider;
-use providers::clock;
+#[derive(Default,Serialize)]
+pub struct Block<'a> {
+    pub name: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub instance: Option<&'a str>,
+    pub full_text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub short_text: Option<String>,
+    #[serde(skip_serializing_if = "str::is_empty")]
+    pub color: &'a str,
+    #[serde(rename = "background", skip_serializing_if = "str::is_empty")]
+    pub background_color: &'a str,
+    #[serde(skip_serializing_if = "Not::not")]
+    pub urgent: bool,
+    pub separator: bool,
+    #[serde(skip_serializing_if = "is_zero")]
+    pub separator_block_width: u32,
+}
 
-fn main() {
-    //initialize protocol
-    println!("{{\"version\":1}}\n[");
-
-    let provider = clock::Provider {};
-
-    loop {
-        //collect blocks from all providers
-        let blocks = provider.render();
-
-        //show blocks
-        println!("{},", json!(blocks).to_string());
-
-        //sleep until next full second
-        let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);
-        std::thread::sleep(Duration::new(0, nsecs));
-    }
+pub trait Provider {
+    fn render(&self) -> Vec<Block>;
 }

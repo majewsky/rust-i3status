@@ -16,36 +16,4 @@
 *
 *******************************************************************************/
 
-extern crate chrono;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
-
-use chrono::{Local, Timelike};
-use std::time::Duration;
-
-mod block;
-mod providers;
-use block::Provider;
-use providers::clock;
-
-fn main() {
-    //initialize protocol
-    println!("{{\"version\":1}}\n[");
-
-    let provider = clock::Provider {};
-
-    loop {
-        //collect blocks from all providers
-        let blocks = provider.render();
-
-        //show blocks
-        println!("{},", json!(blocks).to_string());
-
-        //sleep until next full second
-        let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);
-        std::thread::sleep(Duration::new(0, nsecs));
-    }
-}
+pub mod clock;
