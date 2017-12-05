@@ -35,6 +35,8 @@ pub struct Provider {}
 impl block::Provider for Provider {
 
     fn render(&self) -> Vec<Block> {
+        //TODO simplify according to suggestions in https://stackoverflow.com/a/47650277/334761
+        //when Rust 1.22 enters Arch Linux [community]
         let energy_full = match read_number_from_file(ENERGY_FULL_PATH) {
             Some(val) => val,
             None      => return Vec::new(),
@@ -70,17 +72,15 @@ impl block::Provider for Provider {
 }
 
 fn read_number_from_file(path: &str) -> Option<i64> {
-    let mut file = match File::open(path) {
-        Ok(f) => f,
-        Err(_) => return None,
+    //TODO use `?` operator instead of `match` after Rust 1.22 enters Arch Linux [community]
+    let mut file = match File::open(path).ok() {
+        Some(f) => f,
+        None => return None,
     };
     let mut contents = String::new();
-    match file.read_to_string(&mut contents) {
-        Ok(_) => {},
-        Err(_) => return None,
+    match file.read_to_string(&mut contents).ok() {
+        Some(_) => {},
+        None => return None,
     };
-    match contents.trim().parse::<i64>() {
-        Ok(val) => Some(val),
-        Err(_) => None,
-    }
+    contents.trim().parse::<i64>().ok()
 }
