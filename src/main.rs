@@ -17,6 +17,8 @@
 *******************************************************************************/
 
 extern crate chrono;
+extern crate ipnetwork;
+extern crate pnet;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;

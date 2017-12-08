@@ -16,6 +16,9 @@
 *
 *******************************************************************************/
 
+use ipnetwork::IpNetwork;
+use pnet::datalink;
+
 use block;
 use block::{Block, make_section};
 
@@ -24,10 +27,31 @@ pub struct Provider {}
 impl block::Provider for Provider {
 
     fn render(&self) -> Vec<Block> {
+        //TODO: ugly
+        let mut ips: Vec<String> = Vec::new();
+        for interface in datalink::interfaces() {
+            for ip_net in interface.ips {
+                match ip_net {
+                    IpNetwork::V6(_) => continue,
+                    IpNetwork::V4(ip_net) => {
+                        let ip = ip_net.ip();
+                        if ip.is_loopback() {
+                            continue
+                        }
+                        if ip.is_link_local() {
+                            continue
+                        }
+                        ips.push(format!("{}", ip))
+                    },
+                }
+            }
+        }
+        ips.sort();
+
         make_section("ip", &[
             Block{
                 name: "network",
-                full_text: "TODO".to_owned(),
+                full_text: ips.join(" "),
                 color: "#00AAAA",
                 ..Block::default()
             },
