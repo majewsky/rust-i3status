@@ -35,25 +35,14 @@ pub struct Provider {}
 impl block::Provider for Provider {
 
     fn render(&self) -> Vec<Block> {
-        //TODO simplify according to suggestions in https://stackoverflow.com/a/47650277/334761
-        //when Rust 1.22 enters Arch Linux [community]
-        let energy_full = match read_number_from_file(ENERGY_FULL_PATH) {
+        let data = match read_battery_data() {
             Some(val) => val,
-            None      => return Vec::new(),
-        };
-        let energy_now = match read_number_from_file(ENERGY_NOW_PATH) {
-            Some(val) => val,
-            None      => return Vec::new(),
-        };
-        let is_charging = match read_number_from_file(POWER_ONLINE_PATH) {
-            Some(val) => val > 0,
             None      => return Vec::new(),
         };
 
-        let energy_percent = energy_now * 100 / energy_full;
-        let color = if is_charging {
+        let color = if data.is_charging {
             CHARGING_COLOR
-        } else if energy_percent < 10 {
+        } else if data.energy_percent < 10 {
             WARNING_COLOR
         } else {
             NORMAL_COLOR
@@ -62,7 +51,7 @@ impl block::Provider for Provider {
         make_section("bat", &[
             Block{
                 name: "battery",
-                full_text: format!("{}%", energy_percent),
+                full_text: format!("{}%", data.energy_percent),
                 color: color,
                 ..Block::default()
             },
@@ -71,16 +60,24 @@ impl block::Provider for Provider {
 
 }
 
+struct BatteryData {
+    energy_percent: i64,
+    is_charging: bool,
+}
+
+fn read_battery_data() -> Option<BatteryData> {
+    let energy_full = read_number_from_file(ENERGY_FULL_PATH)?;
+    let energy_now = read_number_from_file(ENERGY_NOW_PATH)?;
+    let power_online = read_number_from_file(POWER_ONLINE_PATH)?;
+    return Some(BatteryData {
+        energy_percent: energy_now * 100 / energy_full,
+        is_charging: power_online > 0,
+    });
+}
+
 fn read_number_from_file(path: &str) -> Option<i64> {
-    //TODO use `?` operator instead of `match` after Rust 1.22 enters Arch Linux [community]
-    let mut file = match File::open(path).ok() {
-        Some(f) => f,
-        None => return None,
-    };
+    let mut file = File::open(path).ok()?;
     let mut contents = String::new();
-    match file.read_to_string(&mut contents).ok() {
-        Some(_) => {},
-        None => return None,
-    };
-    contents.trim().parse::<i64>().ok()
+    file.read_to_string(&mut contents).ok()?;
+    contents.trim().parse().ok()
 }
