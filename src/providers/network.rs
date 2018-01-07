@@ -21,6 +21,7 @@ use pnet::datalink;
 
 use block;
 use block::{Block, make_section};
+use string::DualString::{Dynamic,Static};
 
 pub struct Provider {}
 
@@ -53,9 +54,9 @@ impl block::Provider for Provider {
 
         make_section("ip", &[
             Block{
-                name: "network",
-                full_text: ips.join(" "),
-                color: "#00AAAA",
+                name: Static("network"),
+                full_text: Dynamic(ips.join(" ")),
+                color: Static("#00AAAA"),
                 ..Block::default()
             },
         ])

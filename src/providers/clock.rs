@@ -20,6 +20,7 @@ use chrono::{Datelike, Local, Timelike};
 
 use block;
 use block::Block;
+use string::DualString::{Dynamic,Static};
 
 pub struct Provider {}
 
@@ -31,18 +32,18 @@ impl block::Provider for Provider {
         let time = format!("{:02}:{:02}:{:02}", now.hour(), now.minute(), now.second());
         vec![
             Block{
-                name: "clock",
-                instance: Some("date"),
-                full_text: date,
-                short_text: Some(" ".to_owned()),
-                color: "#AAAAAA",
+                name: Static("clock"),
+                instance: Some(Static("date")),
+                full_text: Dynamic(date),
+                short_text: Some(Static(" ")),
+                color: Static("#AAAAAA"),
                 separator_block_width: 6,
                 ..Block::default()
             },
             Block{
-                name: "clock",
-                instance: Some("time"),
-                full_text: time,
+                name: Static("clock"),
+                instance: Some(Static("time")),
+                full_text: Dynamic(time),
                 ..Block::default()
             },
         ]

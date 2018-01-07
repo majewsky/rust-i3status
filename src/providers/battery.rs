@@ -21,6 +21,7 @@ use std::io::Read;
 
 use block;
 use block::{Block, make_section};
+use string::DualString::{Dynamic,Static};
 
 const ENERGY_FULL_PATH: &'static str = "/sys/class/power_supply/BAT0/energy_full";
 const ENERGY_NOW_PATH:  &'static str = "/sys/class/power_supply/BAT0/energy_now";
@@ -50,9 +51,9 @@ impl block::Provider for Provider {
 
         make_section("bat", &[
             Block{
-                name: "battery",
-                full_text: format!("{}%", data.energy_percent),
-                color: color,
+                name: Static("battery"),
+                full_text: Dynamic(format!("{}%", data.energy_percent)),
+                color: Static(color),
                 ..Block::default()
             },
         ])

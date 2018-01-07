@@ -30,6 +30,7 @@ use std::time::Duration;
 
 mod block;
 mod providers;
+mod string;
 use block::Block;
 
 fn main() {

@@ -19,22 +19,25 @@
 use std::ops::Not;
 use std::vec::Vec;
 
+use string::DualString;
+use string::DualString::Static;
+
 fn is_zero(x: &u32) -> bool {
     *x == 0
 }
 
 #[derive(Clone,Default,Serialize)]
-pub struct Block<'a> {
-    pub name: &'a str,
+pub struct Block {
+    pub name: DualString,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub instance: Option<&'a str>,
-    pub full_text: String,
+    pub instance: Option<DualString>,
+    pub full_text: DualString,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub short_text: Option<String>,
-    #[serde(skip_serializing_if = "str::is_empty")]
-    pub color: &'a str,
-    #[serde(rename = "background", skip_serializing_if = "str::is_empty")]
-    pub background_color: &'a str,
+    pub short_text: Option<DualString>,
+    #[serde(skip_serializing_if = "DualString::is_empty")]
+    pub color: DualString,
+    #[serde(rename = "background", skip_serializing_if = "DualString::is_empty")]
+    pub background_color: DualString,
     #[serde(skip_serializing_if = "Not::not")]
     pub urgent: bool,
     pub separator: bool,
@@ -46,7 +49,7 @@ pub trait Provider {
     fn render(&self) -> Vec<Block>;
 }
 
-pub fn make_section<'a>(caption: &'static str, blocks: &[Block<'a>]) -> Vec<Block<'a>>{
+pub fn make_section<'a>(caption: &'static str, blocks: &[Block]) -> Vec<Block> {
     if blocks.is_empty() {
         return Vec::new();
     }
@@ -56,10 +59,10 @@ pub fn make_section<'a>(caption: &'static str, blocks: &[Block<'a>]) -> Vec<Bloc
     let first_block = &(blocks[0]);
     let mut result = vec![
         Block {
-            name: first_block.name,
-            instance: Some("_caption"),
-            full_text: caption.to_owned(),
-            color: first_block.color,
+            name: first_block.name.clone(),
+            instance: Some(Static("_caption")),
+            full_text: Static(caption),
+            color: first_block.color.clone(),
             ..Block::default()
         },
     ];
