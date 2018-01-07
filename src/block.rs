@@ -49,7 +49,7 @@ pub trait Provider {
     fn render(&self) -> Vec<Block>;
 }
 
-pub fn make_section<'a>(caption: &'static str, blocks: &[Block]) -> Vec<Block> {
+pub fn make_section(caption: &'static str, blocks: &[Block]) -> Vec<Block> {
     if blocks.is_empty() {
         return Vec::new();
     }
