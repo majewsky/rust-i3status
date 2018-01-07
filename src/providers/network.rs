@@ -46,6 +46,9 @@ impl block::Provider for Provider {
                 }
             }
         }
+        if ips.len() == 0 {
+            return vec![];
+        }
         ips.sort();
 
         make_section("ip", &[
