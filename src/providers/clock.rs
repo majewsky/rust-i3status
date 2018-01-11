@@ -26,7 +26,15 @@ pub struct Provider {}
 
 impl block::Provider for Provider {
 
-    fn render(&self) -> Vec<Block> {
+    fn id(&self) -> &'static str {
+        "clock"
+    }
+
+    fn exec_command(&mut self, _args: Vec<&str>) -> bool {
+        false
+    }
+
+    fn render(&mut self) -> Vec<Block> {
         let now = Local::now();
         let date = format!("{:04}-{:02}-{:02}", now.year(), now.month(), now.day());
         let time = format!("{:02}:{:02}:{:02}", now.hour(), now.minute(), now.second());

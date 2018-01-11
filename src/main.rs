@@ -35,38 +35,36 @@ use std::time::Duration;
 mod block;
 mod providers;
 mod string;
-use block::{Block, make_section};
-use string::DualString::{Dynamic, Static};
+use block::Block;
 
 fn main() {
     //initialize protocol
     println!("{{\"version\":1}}\n[");
 
-    let providers = providers::all();
+    let mut providers = providers::all();
     let mut stdin_readable = false;
 
     loop {
-        //collect blocks from all providers
-        let mut blocks: Vec<Block> = providers.iter()
-            .flat_map(|p| p.render())
-            .collect();
-
-        //DEBUG
+        //execute command, if present
         if stdin_readable {
             let mut s = String::new();
             if let Ok(_) = io::stdin().read_line(&mut s) {
-                let mut new_blocks = make_section("stdin", &[
-                    Block{
-                        name: Static("stdin"),
-                        full_text: Dynamic(s.trim().into()),
-                        color: Static("#FF0000"),
-                        ..Block::default()
-                    },
-                ]);
-                new_blocks.append(&mut blocks);
-                blocks = new_blocks;
+                let mut iter = s.split_whitespace();
+                if let Some(command) = iter.next() {
+                    for p in providers.iter_mut() {
+                        if p.id() == command {
+                            p.exec_command(iter.collect());
+                            break;
+                        }
+                    }
+                }
             }
         }
+
+        //collect blocks from all providers
+        let blocks: Vec<Block> = providers.iter_mut()
+            .flat_map(|p| p.render())
+            .collect();
 
         //show blocks
         println!("{},", json!(blocks).to_string());

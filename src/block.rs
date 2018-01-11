@@ -46,7 +46,9 @@ pub struct Block {
 }
 
 pub trait Provider {
-    fn render(&self) -> Vec<Block>;
+    fn id(&self) -> &'static str;
+    fn exec_command(&mut self, args: Vec<&str>) -> bool;
+    fn render(&mut self) -> Vec<Block>;
 }
 
 pub fn make_section(caption: &'static str, blocks: &[Block]) -> Vec<Block> {

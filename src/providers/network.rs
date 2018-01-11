@@ -27,7 +27,15 @@ pub struct Provider {}
 
 impl block::Provider for Provider {
 
-    fn render(&self) -> Vec<Block> {
+    fn id(&self) -> &'static str {
+        "network"
+    }
+
+    fn exec_command(&mut self, _args: Vec<&str>) -> bool {
+        false
+    }
+
+    fn render(&mut self) -> Vec<Block> {
         //TODO: ugly
         let mut ips: Vec<String> = Vec::new();
         for interface in datalink::interfaces() {
