@@ -32,10 +32,9 @@ use std::mem;
 use std::ptr::null_mut;
 use std::time::Duration;
 
-mod block;
+mod fact;
 mod providers;
-mod string;
-use block::Block;
+mod render;
 
 fn main() {
     //initialize protocol
@@ -61,13 +60,10 @@ fn main() {
             }
         }
 
-        //collect blocks from all providers
-        let blocks: Vec<Block> = providers.iter_mut()
+        //render statusline
+        render::to_stdout(providers.iter_mut()
             .flat_map(|p| p.render())
-            .collect();
-
-        //show blocks
-        println!("{},", json!(blocks).to_string());
+            .collect());
 
         //sleep until next full second, but wake up when receiving user command
         let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);

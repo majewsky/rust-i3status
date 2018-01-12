@@ -19,21 +19,16 @@
 use std::fs::File;
 use std::io::Read;
 
-use block;
-use block::{Block, make_section};
-use string::DualString::{Dynamic,Static};
+use fact::{Fact, FactClass, FactPriority};
+use providers;
 
 const ENERGY_FULL_PATH: &'static str = "/sys/class/power_supply/BAT0/energy_full";
 const ENERGY_NOW_PATH:  &'static str = "/sys/class/power_supply/BAT0/energy_now";
 const POWER_ONLINE_PATH: &'static str = "/sys/class/power_supply/AC0/online";
 
-const CHARGING_COLOR: &'static str = "#00AA00";
-const NORMAL_COLOR:   &'static str = "#AAAA00";
-const WARNING_COLOR:  &'static str = "#AA0000";
-
 pub struct Provider {}
 
-impl block::Provider for Provider {
+impl providers::Provider for Provider {
 
     fn id(&self) -> &'static str {
         "battery"
@@ -43,28 +38,25 @@ impl block::Provider for Provider {
         false
     }
 
-    fn render(&mut self) -> Vec<Block> {
+    fn render(&mut self) -> Vec<Fact> {
         let data = match read_battery_data() {
             Some(val) => val,
             None      => return Vec::new(),
         };
 
-        let color = if data.is_charging {
-            CHARGING_COLOR
+        let priority = if data.is_charging {
+            FactPriority::PositiveFact
         } else if data.energy_percent < 10 {
-            WARNING_COLOR
+            FactPriority::DangerFact
         } else {
-            NORMAL_COLOR
+            FactPriority::PassiveFact
         };
 
-        make_section("bat", &[
-            Block{
-                name: Static("battery"),
-                full_text: Dynamic(format!("{}%", data.energy_percent)),
-                color: Static(color),
-                ..Block::default()
-            },
-        ])
+        vec![Fact {
+            class: FactClass::BatteryFact,
+            priority: priority,
+            text: format!("{}%", data.energy_percent),
+        }]
     }
 
 }

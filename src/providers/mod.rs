@@ -16,16 +16,20 @@
 *
 *******************************************************************************/
 
-pub mod clock;
 pub mod battery;
 pub mod network;
 
-use block;
+use fact;
 
-pub fn all() -> Vec<Box<block::Provider>> {
+pub trait Provider {
+    fn id(&self) -> &'static str;
+    fn exec_command(&mut self, args: Vec<&str>) -> bool;
+    fn render(&mut self) -> Vec<fact::Fact>;
+}
+
+pub fn all() -> Vec<Box<Provider>> {
     vec![
         Box::new(network::Provider{}),
         Box::new(battery::Provider{}),
-        Box::new(clock::Provider{}),
     ]
 }

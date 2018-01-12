@@ -19,13 +19,12 @@
 use ipnetwork::IpNetwork;
 use pnet::datalink;
 
-use block;
-use block::{Block, make_section};
-use string::DualString::{Dynamic,Static};
+use fact::{Fact, FactClass, FactPriority};
+use providers;
 
 pub struct Provider {}
 
-impl block::Provider for Provider {
+impl providers::Provider for Provider {
 
     fn id(&self) -> &'static str {
         "network"
@@ -35,7 +34,7 @@ impl block::Provider for Provider {
         false
     }
 
-    fn render(&mut self) -> Vec<Block> {
+    fn render(&mut self) -> Vec<Fact> {
         //TODO: ugly
         let mut ips: Vec<String> = Vec::new();
         for interface in datalink::interfaces() {
@@ -60,14 +59,11 @@ impl block::Provider for Provider {
         }
         ips.sort();
 
-        make_section("ip", &[
-            Block{
-                name: Static("network"),
-                full_text: Dynamic(ips.join(" ")),
-                color: Static("#00AAAA"),
-                ..Block::default()
-            },
-        ])
+        vec![Fact{
+            class: FactClass::NetworkFact,
+            priority: FactPriority::PassiveFact,
+            text: ips.join(" "),
+        }]
     }
 
 }
