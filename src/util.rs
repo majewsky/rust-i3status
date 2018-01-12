@@ -1,6 +1,6 @@
 /*******************************************************************************
 *
-* Copyright 2017 Stefan Majewsky <majewsky@gmx.net>
+* Copyright 2018 Stefan Majewsky <majewsky@gmx.net>
 *
 * This program is free software: you can redistribute it and/or modify it under
 * the terms of the GNU General Public License as published by the Free Software
@@ -16,22 +16,17 @@
 *
 *******************************************************************************/
 
-mod battery;
-mod brightness;
-mod network;
+use std::fs::File;
+use std::io::{Read, Result, Write};
 
-use fact;
-
-pub trait Provider {
-    fn id(&self) -> &'static str;
-    fn exec_command(&mut self, args: Vec<&str>) -> bool;
-    fn render(&mut self) -> Vec<fact::Fact>;
+pub fn read_number_from_file(path: &str) -> Option<u64> {
+    let mut file = File::open(path).ok()?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).ok()?;
+    contents.trim().parse().ok()
 }
 
-pub fn all() -> Vec<Box<Provider>> {
-    vec![
-        Box::new(network::Provider{}),
-        Box::new(battery::Provider{}),
-        Box::new(brightness::new_provider()),
-    ]
+pub fn write_number_to_file(path: &str, number: u64) -> Result<()> {
+    let mut file = File::create(path)?;
+    write!(file, "{}", number)
 }

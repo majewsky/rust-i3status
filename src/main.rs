@@ -35,6 +35,7 @@ use std::time::Duration;
 mod fact;
 mod providers;
 mod render;
+mod util;
 
 fn main() {
     //initialize protocol

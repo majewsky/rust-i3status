@@ -16,11 +16,9 @@
 *
 *******************************************************************************/
 
-use std::fs::File;
-use std::io::Read;
-
 use fact::{Fact, FactClass, FactPriority};
 use providers;
+use util::read_number_from_file;
 
 const ENERGY_FULL_PATH: &'static str = "/sys/class/power_supply/BAT0/energy_full";
 const ENERGY_NOW_PATH:  &'static str = "/sys/class/power_supply/BAT0/energy_now";
@@ -62,7 +60,7 @@ impl providers::Provider for Provider {
 }
 
 struct BatteryData {
-    energy_percent: i64,
+    energy_percent: u64,
     is_charging: bool,
 }
 
@@ -74,11 +72,4 @@ fn read_battery_data() -> Option<BatteryData> {
         energy_percent: energy_now * 100 / energy_full,
         is_charging: power_online > 0,
     });
-}
-
-fn read_number_from_file(path: &str) -> Option<i64> {
-    let mut file = File::open(path).ok()?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).ok()?;
-    contents.trim().parse().ok()
 }
