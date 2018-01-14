@@ -17,8 +17,7 @@
 *******************************************************************************/
 
 use chrono::{Datelike, Local, Timelike};
-use serde::ser::{Serialize, Serializer};
-use std::ops::Not;
+use json;
 use std::vec::Vec;
 
 use fact::{Fact, FactClass, FactPriority};
@@ -26,25 +25,42 @@ use fact::{Fact, FactClass, FactPriority};
 ////////////////////////////////////////////////////////////////////////////////
 // struct Block
 
-fn is_zero(x: &u32) -> bool {
-    *x == 0
-}
-
-#[derive(Clone,Default,Serialize)]
+#[derive(Clone,Default)]
 struct Block {
     name: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
     instance: Option<&'static str>,
     full_text: DualString,
-    #[serde(skip_serializing_if = "Option::is_none")]
     short_text: Option<&'static str>,
-    #[serde(skip_serializing_if = "str::is_empty")]
     color: &'static str,
-    #[serde(skip_serializing_if = "Not::not")]
     urgent: bool,
     separator: bool,
-    #[serde(skip_serializing_if = "is_zero")]
     separator_block_width: u32,
+}
+
+impl Block {
+    fn to_json(&self) -> json::JsonValue {
+        let mut obj = object!{
+            "name" => self.name,
+            "full_text" => self.full_text.as_ref(),
+            "separator" => self.separator,
+        };
+        if let Some(val) = self.instance {
+            obj["instance"] = val.into();
+        }
+        if let Some(val) = self.short_text {
+            obj["short_text"] = val.into();
+        }
+        if !self.color.is_empty() {
+            obj["color"] = self.color.into();
+        }
+        if self.urgent {
+            obj["urgent"] = true.into();
+        }
+        if self.separator_block_width > 0 {
+            obj["separator_block_width"] = self.separator_block_width.into();
+        }
+        obj
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,13 +78,12 @@ impl Default for DualString {
     }
 }
 
-impl Serialize for DualString {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+impl AsRef<str> for DualString {
+    fn as_ref(&self) -> &str
     {
         match *self {
-            DualString::Static(ref s) => serializer.serialize_str(s),
-            DualString::Dynamic(ref s) => serializer.serialize_str(&s),
+            DualString::Static(ref s) => s,
+            DualString::Dynamic(ref s) => &s,
         }
     }
 }
@@ -79,7 +94,7 @@ impl Serialize for DualString {
 pub fn to_stdout(facts: Vec<Fact>) {
     let mut blocks = compile_facts(facts);
     blocks.extend_from_slice(&render_clock());
-    println!("{},", json!(blocks).to_string());
+    println!("{},", json::JsonValue::Array(blocks.iter().map(Block::to_json).collect()));
 }
 
 fn compile_facts(facts: Vec<Fact>) -> Vec<Block> {

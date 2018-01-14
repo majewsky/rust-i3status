@@ -18,13 +18,10 @@
 
 extern crate chrono;
 extern crate ipnetwork;
+#[macro_use]
+extern crate json;
 extern crate libc;
 extern crate pnet;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-#[macro_use]
-extern crate serde_json;
 
 use chrono::{Local, Timelike};
 use std::io;
