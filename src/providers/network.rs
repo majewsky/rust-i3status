@@ -38,6 +38,10 @@ impl providers::Provider for Provider {
         //TODO: ugly
         let mut ips: Vec<String> = Vec::new();
         for interface in datalink::interfaces() {
+            if interface.name == "docker0" {
+                //that one is not connecting me to the internet
+                continue
+            }
             for ip_net in interface.ips {
                 match ip_net {
                     IpNetwork::V6(_) => continue,
