@@ -23,29 +23,32 @@ extern crate json;
 extern crate libc;
 extern crate pnet;
 
-use chrono::{Local, Timelike};
-use std::io;
-use std::mem;
-use std::ptr::null_mut;
-use std::time::Duration;
+use std::sync::mpsc;
 
 mod fact;
 mod providers;
 mod render;
+mod threads;
 mod util;
 
 fn main() {
     //initialize protocol
     println!("{{\"version\":1}}\n[");
 
+    //initialize providers
     let mut providers = providers::all();
-    let mut stdin_readable = false;
+
+    //launch threads
+    let (tx, rx) = mpsc::channel();
+    threads::wait_for_input(tx.clone());
+    threads::periodic_wakeup(tx.clone());
 
     loop {
-        //execute command, if present
-        if stdin_readable {
-            let mut s = String::new();
-            if let Ok(_) = io::stdin().read_line(&mut s) {
+        //wait for next event
+        match rx.recv().unwrap() {
+            threads::Event::Render => {},
+            threads::Event::Command(s) => {
+                //execute received command
                 let mut iter = s.split_whitespace();
                 if let Some(command) = iter.next() {
                     for p in providers.iter_mut() {
@@ -55,42 +58,12 @@ fn main() {
                         }
                     }
                 }
-            }
+            },
         }
 
         //render statusline
         render::to_stdout(providers.iter_mut()
             .flat_map(|p| p.render())
             .collect());
-
-        //sleep until next full second, but wake up when receiving user command
-        let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);
-        stdin_readable = match wait_for_readable(libc::STDIN_FILENO, nsecs) {
-            Ok(val) => val,
-            Err(_) => {
-                //fallback to regular sleep() if select() does not work
-                let nsecs = 1_000_000_000 - (Local::now().nanosecond() % 1_000_000_000);
-                std::thread::sleep(Duration::new(0, nsecs));
-                false
-            },
-        };
-    }
-}
-
-//Returns whether `fd` has become readable before the timeout.
-fn wait_for_readable(fd: libc::c_int, timeout_nsecs: u32) -> io::Result<bool> {
-    unsafe {
-        let mut in_fds: libc::fd_set = mem::uninitialized();
-        libc::FD_ZERO(&mut in_fds);
-        libc::FD_SET(fd, &mut in_fds);
-        let mut tv =  libc::timeval {
-            tv_sec: 0,
-            tv_usec: (timeout_nsecs / 1000) as libc::suseconds_t,
-        };
-        let retval = libc::select(1, &mut in_fds, null_mut(), null_mut(), &mut tv);
-        if retval == -1 {
-            return Err(io::Error::last_os_error());
-        }
-        Ok(libc::FD_ISSET(fd, &mut in_fds))
     }
 }
